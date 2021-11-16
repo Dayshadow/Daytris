@@ -11,21 +11,6 @@ window.addEventListener('keyup', function (e) {
     console.log(keys)
 });
 
-let testarr1 = [
-    ["#", "@", "@", "@", "#", "#"],
-    ["#", "#", "#", "@", "#", "#"],
-    ["L", "L", "#", "#", "#", "#"],
-    ["#", "L", "#", "#", "#", "#"],
-    ["#", "L", "#", "#", "#", "#"],
-    ["#", "#", "#", "#", "#", "#"]
-    ]
-
-let testarr2 = [
-    [1, 1, 1],
-    [0, 1, 0],
-    [0, 0, 0]
-    ]
-
 function paste2d(srcArr, pasteArr, x, y, replaceValue) {
     let ret = srcArr;
     if (!(y + pasteArr.length > srcArr.length) && !(x + pasteArr[0].length > srcArr[0].length)) {

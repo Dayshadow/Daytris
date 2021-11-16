@@ -5,7 +5,7 @@ let h = c.height = window.innerHeight;
 
 let m = new Matrix();
 
-const gs = 20
+const gs = Math.floor(h / 30);
 
 function drawLoop() {
     ctx.clearRect(0, 0, w, h);

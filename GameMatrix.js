@@ -23,19 +23,38 @@ class Matrix {
     }
     draw(x, y, gridSize, ctx, hiddenRowCount = 4) {
         let numDrawRows = this.rows - hiddenRowCount;
+        let boardWidth = this.columns * gridSize;
+        let boardHeight = numDrawRows * gridSize;
         ctx.strokeStyle = "rgb(50, 50, 50)";
         ctx.fillStyle = "rgb(20, 20, 20)"
         ctx.lineCap = "round";
-        ctx.lineWidth = 30;
+        ctx.lineWidth = 80;
+
         ctx.beginPath();
-        ctx.rect(x, y, this.columns * gridSize, numDrawRows * gridSize);
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + boardWidth, y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x + boardWidth, y);
+        ctx.lineTo(x + boardWidth, y + boardHeight);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x + boardWidth, y + boardHeight);
+        ctx.lineTo(x, y + boardHeight);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x, y + boardHeight);
+        ctx.lineTo(x, y);
         ctx.stroke();
 
         ctx.lineCap = "butt";
         ctx.fillStyle = "rgb(20, 20, 20)"
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.rect(x, y, this.columns * gridSize, numDrawRows * gridSize);
+        ctx.rect(x, y, boardWidth, boardHeight);
         ctx.fill();
         ctx.stroke();
         for (let i = 0; i < this.data.length; i++) {
