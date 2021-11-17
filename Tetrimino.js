@@ -7,6 +7,10 @@ class Tetrimino {
         this.color = tData[this.type].color;
         this.data = tData[this.type].rotationStates[this.rs];
     }
+    setRotation(state) {
+        this.rs = state
+        this.data = tData[this.type].rotationStates[this.rs];
+    }
     rotate(clockwise = true) {
         if (clockwise) {
             this.rs = (this.rs + 1) % 4

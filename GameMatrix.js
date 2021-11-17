@@ -14,6 +14,10 @@ class Matrix {
         this.inputQueue = [];
         this.DAS = 5;
         this.DASTimer = 0;
+        this.DASDelay = 10;
+        this.DASDelayTimer = 0;
+
+        this.lastInput;
 
         this.lockDelay = 60
         this.lockTimer = this.lockDelay;
@@ -22,6 +26,7 @@ class Matrix {
         this.rnd = new PieceRandomizer();
         this.currentTetrimino = new Tetrimino(this.spawnX, this.spawnY, this.rnd.pick(), 0);
         this.heldTetrimino;
+
 
         this.data = [];
         for (let i = 0; i < rows; i++) {
@@ -69,39 +74,40 @@ class Matrix {
             this.heldTetrimino = tmp;
             this.heldTetrimino.x = this.spawnX;
             this.heldTetrimino.y = this.spawnY;
-            this.heldTetrimino.rs = 0;
-            //this.respawnTetrimino();
+            this.heldTetrimino.setRotation(0);
         } else {
             this.heldTetrimino = this.currentTetrimino;
             this.heldTetrimino.x = this.spawnX;
             this.heldTetrimino.y = this.spawnY;
-            this.heldTetrimino.rs = 0;
+            this.heldTetrimino.setRotation(0);
             this.respawnTetrimino();
         }
     }
+    lockPiece() {
+        this.currentTetrimino = new Tetrimino(this.currentTetrimino.x, this.currentTetrimino.y, this.currentTetrimino.type, this.currentTetrimino.rs);
+        pasteTetrimino(this.data, this.currentTetrimino);
+        if (!this.respawnTetrimino()) {
+            this.regenerate();
+        }
+    }
     processStuck() {
-        // -------------------example code mostly for testing-------------------------------
-        if (this.stuck) {
-            if (this.lockTimer <= 0) {
-                this.currentTetrimino = new Tetrimino(this.currentTetrimino.x, this.currentTetrimino.y, this.currentTetrimino.type, this.currentTetrimino.rs);
-                pasteTetrimino(this.data, this.currentTetrimino);
-                let respawnSucceeded = this.respawnTetrimino();
-                if (!respawnSucceeded) {
-                    this.regenerate();
-                }
+        this.removeTetrimino()
+        if (this.checkRelativePos(0, 1, 0)) {
+            this.stuck = false; // making sure
+            this.pushTetrimino();
+            this.resetLockTimer();
+            return;
+        }
+        this.pushTetrimino();
 
-                this.resetLockTimer();
+        if (this.stuck) {
+            this.softdropping ? this.lockTimer -= 10 : this.lockTimer--;
+            if (this.lockTimer <= 0) {
+                this.lockPiece();
                 this.stuck = false;
-            } else {
-                if (this.softdropping) {
-                    this.lockTimer -= 10;
-                } else {
-                    this.lockTimer--;
-                }
+                this.resetLockTimer();
             }
         }
-        // ----------------------------------------------------------------------------------
-
     }
     moveTetriminoDown() {
         if (this.checkRelativePos(0, 1, 0)) {
@@ -115,7 +121,8 @@ class Matrix {
     }
     hardDrop() {
         while (this.moveTetriminoDown()) { }
-        this.lockTimer = 0;
+        this.lockPiece();
+        this.resetLockTimer();
     }
     setSoftdrop(bool) {
         // this is scuffed but it makes it so that 
@@ -148,18 +155,45 @@ class Matrix {
         this.setSoftdrop(inp.getHeldKey("ArrowDown"));
         this.removeTetrimino();
 
+
+        // code that moves the pieces once instantly
+        if (inp.getPressedKey('ArrowLeft')) {
+            if (this.lastInput == "ArrowRight") this.resetDASDelay();
+            this.lastInput = 'ArrowLeft';
+            this.moveTetriminoSideways(-1);
+        } else
+
+            if (inp.getPressedKey('ArrowRight')) {
+                if (this.lastInput == "ArrowLeft") this.resetDASDelay();
+                this.lastInput = 'ArrowRight';
+                this.moveTetriminoSideways(1);
+            }
+
+        // code for if you continue to hold the arrow key 
+        //makes it so it waits a bit before continuing
         if (inp.getHeldKey("ArrowLeft")) {
-            if (this.DASTimer == 0) {
+            if (this.lastInput == "ArrowRight") this.resetDASDelay();
+            if (this.DASDelayTimer > 0) { // these timers are getting confusing
+                this.DASDelayTimer--;
+            } else if (this.DASTimer <= 0) {
                 this.moveTetriminoSideways(-1);
                 this.resetDASTimer();
             }
-        }
-        if (inp.getHeldKey('ArrowRight')) {
-            if (this.DASTimer == 0) {
+            this.lastInput = 'ArrowLeft';
+        } else if (inp.getHeldKey('ArrowRight')) {
+            if (this.lastInput == "ArrowLeft") this.resetDASDelay();
+            if (this.DASDelayTimer > 0) {
+                this.DASDelayTimer--;
+            } else if (this.DASTimer <= 0) {
                 this.moveTetriminoSideways(1);
                 this.resetDASTimer();
             }
+            this.lastInput = 'ArrowRight';
         }
+        if ((!inp.getHeldKey('ArrowRight') && !inp.getHeldKey('ArrowLeft')) || (inp.getHeldKey('ArrowRight') && inp.getHeldKey('ArrowLeft'))) {
+            this.resetDASDelay();
+        }
+
         if (inp.getPressedKey("ArrowUp")) {
             this.rotateTetrimino();
         }
@@ -168,6 +202,12 @@ class Matrix {
         }
         if (inp.getPressedKey("KeyC")) {
             this.hold();
+        }
+        if (inp.getPressedKey("Equal")) {
+            this.DAS--;
+        }
+        if (inp.getPressedKey("Minus")) {
+            this.DAS++;
         }
         this.pushTetrimino();
     }
@@ -185,6 +225,7 @@ class Matrix {
     }
     update() {
         if (this.DASTimer > 0) this.DASTimer--;
+
         this.processInputs();
         if (this.frameCounter <= 0) {
             this.frameCounter = this.softdropping ? this.DAS : this.framesBetweenUpdates;
@@ -207,6 +248,9 @@ class Matrix {
     resetDASTimer() {
         this.DASTimer = this.DAS
     }
+    resetDASDelay() {
+        this.DASDelayTimer = this.DASDelay;
+    }
     checkLineClears() {
         for (let i = 0; i < this.data; i++) {
             let isFilled = this.data[i].reduce((a, b) => { a.occupied && b.occupied });
@@ -214,6 +258,11 @@ class Matrix {
                 shiftLinesDown(this.data, i);
             }
         }
+    }
+    clearLine(index) {
+        this.removeTetrimino();
+        shiftLinesDown(this.data, index);
+        this.pushTetrimino();
     }
 
     regenerate() { // clears the Matrix
@@ -224,13 +273,44 @@ class Matrix {
                 this.data[i].push(new Mino());
             }
         }
+        this.heldTetrimino = undefined;
     }
 
-    draw(x, y, gridSize, ctx, hiddenRowCount = 4) {
+    draw(x, y, gridSize, frame, ctx, hiddenRowCount = 4) {
 
         let numDrawRows = this.rows - hiddenRowCount;
         let boardWidth = this.columns * gridSize;
         let boardHeight = numDrawRows * gridSize;
+
+        ctx.fillStyle = rgb(
+            Math.floor(Math.sin(frame / 120 + 12.3) * 128) + 128,
+            Math.floor(Math.cos(frame / 100) * 128) + 128,
+            Math.floor(Math.sin(frame / 130 + 22.424) * 128) + 128
+        );
+        let fontSize = 20
+        ctx.font = fontSize + "px system-ui"
+        let titleText = "Welcome to my questionably coded tetris clone"
+        let titleWidth = titleText.length * fontSize * 0.465;
+        ctx.fillText(titleText, (w / 2) - titleWidth / 2, 50);
+
+        fontSize = 15
+        ctx.font = fontSize + "px system-ui";
+        ctx.fillText("Controls are:", 20, 100);
+        ctx.fillText("Left + Right arrow keys to move", 20, 100 + 2 * fontSize);
+        ctx.fillText("Z to spin counter clockwise", 20, 100 + 3 * fontSize);
+        ctx.fillText("Hold down arrow to fall faster", 20, 100 + 4 * fontSize);
+        ctx.fillText("Space to drop instantly", 20, 100 + 5 * fontSize);
+        ctx.fillText("C to hold a piece for later", 20, 100 + 6 * fontSize);
+
+        if (this.heldTetrimino) {
+            fontSize = 30
+            ctx.font = fontSize + "px system-ui"
+            let heldText = "Current Held Piece: " + this.heldTetrimino.type;
+            let heldTextWidth = heldText.length * fontSize * 0.465;
+            ctx.fillText(heldText, (w / 2) - heldTextWidth / 2, h * 0.95);
+        }
+
+
 
         ctx.strokeStyle = "rgb(50, 50, 50)";
         ctx.fillStyle = "rgb(20, 20, 20)"

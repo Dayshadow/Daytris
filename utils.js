@@ -5,6 +5,7 @@ Number.prototype.clamp = function (min, max) {
 let inp = new InputHandler();
 window.addEventListener('keydown', (e) => {
     inp.newKeyDown(e.code);
+    //console.log(e.code)
     // if (!(keys.includes(e.code))) {
     //     keys.push(e.code);
     //     keys.map((x) => { return x.toLowerCase() })
@@ -64,3 +65,6 @@ function shuffle(array) {
     return array;
   }
 
+function rgb(r, g, b) {
+    return "rgb(" + r + ", " + g + ", " + b +")"
+}
