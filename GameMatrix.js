@@ -26,6 +26,7 @@ class Matrix {
         this.rnd = new PieceRandomizer();
         this.currentTetrimino = new Tetrimino(this.spawnX, this.spawnY, this.rnd.pick(), 0);
         this.heldTetrimino;
+        this.holdAllowable = true;
 
 
         this.data = [];
@@ -68,19 +69,22 @@ class Matrix {
         return false;
     }
     hold() {
-        if (this.heldTetrimino) {
-            let tmp = this.currentTetrimino;
-            this.currentTetrimino = this.heldTetrimino;
-            this.heldTetrimino = tmp;
-            this.heldTetrimino.x = this.spawnX;
-            this.heldTetrimino.y = this.spawnY;
-            this.heldTetrimino.setRotation(0);
-        } else {
-            this.heldTetrimino = this.currentTetrimino;
-            this.heldTetrimino.x = this.spawnX;
-            this.heldTetrimino.y = this.spawnY;
-            this.heldTetrimino.setRotation(0);
-            this.respawnTetrimino();
+        if (this.holdAllowable) {
+            this.holdAllowable = false;
+            if (this.heldTetrimino) {
+                let tmp = this.currentTetrimino;
+                this.currentTetrimino = this.heldTetrimino;
+                this.heldTetrimino = tmp;
+                this.heldTetrimino.x = this.spawnX;
+                this.heldTetrimino.y = this.spawnY;
+                this.heldTetrimino.setRotation(0);
+            } else {
+                this.heldTetrimino = this.currentTetrimino;
+                this.heldTetrimino.x = this.spawnX;
+                this.heldTetrimino.y = this.spawnY;
+                this.heldTetrimino.setRotation(0);
+                this.respawnTetrimino();
+            }
         }
     }
     lockPiece() {
@@ -89,6 +93,8 @@ class Matrix {
         if (!this.respawnTetrimino()) {
             this.regenerate();
         }
+        this.checkLineClears();
+        this.holdAllowable = true;
     }
     processStuck() {
         this.removeTetrimino()
@@ -197,6 +203,9 @@ class Matrix {
         if (inp.getPressedKey("ArrowUp")) {
             this.rotateTetrimino();
         }
+        if (inp.getPressedKey("KeyZ")) {
+            this.rotateTetrimino(-1);
+        }
         if (inp.getPressedKey("Space")) {
             this.hardDrop();
         }
@@ -205,23 +214,21 @@ class Matrix {
         }
         if (inp.getPressedKey("Equal")) {
             this.DAS--;
+            this.DAS = this.DAS.clamp(1, 40)
         }
         if (inp.getPressedKey("Minus")) {
             this.DAS++;
+            this.DAS = this.DAS.clamp(1, 40)
+        }
+        if (inp.getPressedKey("KeyO")) {
+            this.DASDelay--;
+            this.DASDelay = this.DASDelay.clamp(0, 200)
+        }
+        if (inp.getPressedKey("KeyP")) {
+            this.DASDelay++;
+            this.DASDelay = this.DASDelay.clamp(0, 200)
         }
         this.pushTetrimino();
-    }
-    processInputQueue() { // unused
-        for (let i = this.inputQueue.length - 1; i >= 0; i--) {
-            if (this.inputQueue[i] == "r") {
-                this.moveTetriminoSideways(1);
-                this.inputQueue.splice(i, 1);
-            }
-            if (this.inputQueue[i] == "l") {
-                this.moveTetriminoSideways(-1);
-                this.inputQueue.splice(i, 1);
-            }
-        }
     }
     update() {
         if (this.DASTimer > 0) this.DASTimer--;
@@ -232,9 +239,7 @@ class Matrix {
             // Piece Update Code -----------------------
             this.removeTetrimino(); // deletes the minos represeneting the currentTetrimino from the previous frame
             this.moveTetriminoDown();
-            //this.processInputQueue(); unnecesary
             this.pushTetrimino(); // insert the updated tetrimino
-            this.checkLineClears();
             // -----------------------------------------
         } else {
             this.frameCounter--;
@@ -252,12 +257,15 @@ class Matrix {
         this.DASDelayTimer = this.DASDelay;
     }
     checkLineClears() {
-        for (let i = 0; i < this.data; i++) {
-            let isFilled = this.data[i].reduce((a, b) => { a.occupied && b.occupied });
+        let linesCleared = 0;
+        for (let i = 0; i < this.data.length; i++) {
+            let isFilled = this.data[i].reduce((a, b) => { return a && b.occupied }, true);
             if (isFilled) {
                 shiftLinesDown(this.data, i);
+                linesCleared++;
             }
         }
+        console.log(linesCleared);
     }
     clearLine(index) {
         this.removeTetrimino();
@@ -301,6 +309,13 @@ class Matrix {
         ctx.fillText("Hold down arrow to fall faster", 20, 100 + 4 * fontSize);
         ctx.fillText("Space to drop instantly", 20, 100 + 5 * fontSize);
         ctx.fillText("C to hold a piece for later", 20, 100 + 6 * fontSize);
+        ctx.fillText("Minus key decreases the Delayed Auto Shift speed", 20, 100 + 8 * fontSize);
+        ctx.fillText("Plus key increases the Delayed Auto Shift speed", 20, 100 + 9 * fontSize);
+        ctx.fillText("Current frame count per DAS movement: " + this.DAS, 30, 100 + 10 * fontSize);
+        ctx.fillText("O decreases the Delayed Auto Shift delay", 20, 100 + 12 * fontSize);
+        ctx.fillText("P  increases the Delayed Auto Shift delay", 20, 100 + 13 * fontSize);
+        ctx.fillText("Amount of frames required to hold before auto shift: " + this.DASDelay, 30, 100 + 14 * fontSize);
+
 
         if (this.heldTetrimino) {
             fontSize = 30
