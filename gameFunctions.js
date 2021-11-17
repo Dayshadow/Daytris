@@ -31,3 +31,13 @@ function checkTetriminoPos(matrixData, tetriminoData, x, y) {
     }
     return true;
 }
+
+function shiftLinesDown(data, deletedIndex) {
+    let arrayWidth = data[0].length;
+    data.splice(deletedIndex, 1);
+    let tmpArr = [];
+    for (let i = 0; i < arrayWidth; i++) {
+        tmpArr.push(new Mino());
+    }
+    data.unshift(tmpArr);
+}

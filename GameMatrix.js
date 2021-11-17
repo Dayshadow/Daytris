@@ -4,7 +4,10 @@ class Matrix {
         this.rows = rows;
         this.columns = columns;
 
-        this.framesBetweenUpdates = 10;
+        this.spawnX = 3;
+        this.spawnY = 3;
+
+        this.framesBetweenUpdates = 30;
         this.softdropping = false;
         this.frameCounter = this.framesBetweenUpdates;
 
@@ -17,7 +20,8 @@ class Matrix {
         this.stuck = false;
 
         this.rnd = new PieceRandomizer();
-        this.currentTetrimino = new Tetrimino(3, 0, this.rnd.pick(), 0);
+        this.currentTetrimino = new Tetrimino(this.spawnX, this.spawnY, this.rnd.pick(), 0);
+        this.heldTetrimino;
 
         this.data = [];
         for (let i = 0; i < rows; i++) {
@@ -48,18 +52,41 @@ class Matrix {
         )
     }
 
+    respawnTetrimino() {
+        let newX = 3;
+        let newType = this.rnd.pick();
+        let newRot = 0;
+        if (checkTetriminoPos(this.data, tData[newType].rotationStates[newRot], newX, 3)) {
+            this.currentTetrimino = new Tetrimino(newX, 3, newType, newRot);
+            return true;
+        }
+        return false;
+    }
+    hold() {
+        if (this.heldTetrimino) {
+            let tmp = this.currentTetrimino;
+            this.currentTetrimino = this.heldTetrimino;
+            this.heldTetrimino = tmp;
+            this.heldTetrimino.x = this.spawnX;
+            this.heldTetrimino.y = this.spawnY;
+            this.heldTetrimino.rs = 0;
+            //this.respawnTetrimino();
+        } else {
+            this.heldTetrimino = this.currentTetrimino;
+            this.heldTetrimino.x = this.spawnX;
+            this.heldTetrimino.y = this.spawnY;
+            this.heldTetrimino.rs = 0;
+            this.respawnTetrimino();
+        }
+    }
     processStuck() {
         // -------------------example code mostly for testing-------------------------------
         if (this.stuck) {
-            if (this.lockTimer <= 0 /*&& !this.checkRelativePos(0, 1, 0)*/) {
+            if (this.lockTimer <= 0) {
                 this.currentTetrimino = new Tetrimino(this.currentTetrimino.x, this.currentTetrimino.y, this.currentTetrimino.type, this.currentTetrimino.rs);
                 pasteTetrimino(this.data, this.currentTetrimino);
-                let newX = 3;
-                let newType = this.rnd.pick();
-                let newRot = 0;
-                if (checkTetriminoPos(this.data, tData[newType].rotationStates[newRot], newX, 3)) {
-                    this.currentTetrimino = new Tetrimino(newX, 3, newType, newRot);
-                } else {
+                let respawnSucceeded = this.respawnTetrimino();
+                if (!respawnSucceeded) {
                     this.regenerate();
                 }
 
@@ -76,7 +103,6 @@ class Matrix {
         // ----------------------------------------------------------------------------------
 
     }
-
     moveTetriminoDown() {
         if (this.checkRelativePos(0, 1, 0)) {
             this.currentTetrimino.y++; // if the spot below is avalible, move down one
@@ -103,7 +129,6 @@ class Matrix {
             this.softdropping = false;
         }
     }
-
     moveTetriminoSideways(relX) {
         if (this.checkRelativePos(relX, 0, 0)) {
             this.currentTetrimino.x += relX;
@@ -127,7 +152,7 @@ class Matrix {
             if (this.DASTimer == 0) {
                 this.moveTetriminoSideways(-1);
                 this.resetDASTimer();
-            } 
+            }
         }
         if (inp.getHeldKey('ArrowRight')) {
             if (this.DASTimer == 0) {
@@ -140,6 +165,9 @@ class Matrix {
         }
         if (inp.getPressedKey("Space")) {
             this.hardDrop();
+        }
+        if (inp.getPressedKey("KeyC")) {
+            this.hold();
         }
         this.pushTetrimino();
     }
@@ -155,18 +183,17 @@ class Matrix {
             }
         }
     }
-    
     update() {
         if (this.DASTimer > 0) this.DASTimer--;
         this.processInputs();
         if (this.frameCounter <= 0) {
-            this.frameCounter = this.softdropping ? Math.floor(this.framesBetweenUpdates / 4) : this.framesBetweenUpdates;
+            this.frameCounter = this.softdropping ? this.DAS : this.framesBetweenUpdates;
             // Piece Update Code -----------------------
-            console.log(inp);
             this.removeTetrimino(); // deletes the minos represeneting the currentTetrimino from the previous frame
             this.moveTetriminoDown();
             //this.processInputQueue(); unnecesary
             this.pushTetrimino(); // insert the updated tetrimino
+            this.checkLineClears();
             // -----------------------------------------
         } else {
             this.frameCounter--;
@@ -181,7 +208,12 @@ class Matrix {
         this.DASTimer = this.DAS
     }
     checkLineClears() {
-
+        for (let i = 0; i < this.data; i++) {
+            let isFilled = this.data[i].reduce((a, b) => { a.occupied && b.occupied });
+            if (isFilled) {
+                shiftLinesDown(this.data, i);
+            }
+        }
     }
 
     regenerate() { // clears the Matrix
