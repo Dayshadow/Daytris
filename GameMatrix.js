@@ -1,12 +1,15 @@
 class Matrix {
     constructor(rows = 24, columns = 10) {
+
         this.rows = rows;
         this.columns = columns;
-        this.data = [];
+
         this.stuck = false;
+
         this.rnd = new PieceRandomizer();
         this.currentTetrimino = new Tetrimino(3, 0, this.rnd.pick(), 0);
 
+        this.data = [];
         for (let i = 0; i < rows; i++) {
             this.data.push([]);
             for (let j = 0; j < columns; j++) {
@@ -15,7 +18,7 @@ class Matrix {
         }
 
     }
-    pushTetrimino() {
+    pushTetrimino() { // this is actually mostly unnecesary, an artifact of the horrible way the code used to work
         let pushRes = pasteTetrimino(this.data, this.currentTetrimino);
         if (pushRes !== null) {
             this.data = pushRes;
@@ -41,8 +44,8 @@ class Matrix {
 
 
         this.data = pasteTetrimino(this.data, this.currentTetrimino, true); // removes the existing tetrimino
-        if (checkTetriminoPos(this.data, this.currentTetrimino.data, this.currentTetrimino.x, this.currentTetrimino.y + 1)) {
-            this.currentTetrimino.y++;
+        if (checkTetriminoPos(this.data, this.currentTetrimino.data, this.currentTetrimino.x, this.currentTetrimino.y + 1)) { 
+            this.currentTetrimino.y++; // if the spot below is avalible, move there
         } else {
             this.stuck = true; // this is temporary, I will implement lock delay
         }
