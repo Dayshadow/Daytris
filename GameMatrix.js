@@ -44,7 +44,7 @@ class Matrix {
 
 
         this.data = pasteTetrimino(this.data, this.currentTetrimino, true); // removes the existing tetrimino
-        this.currentTetrimino.rotate();
+        //this.currentTetrimino.rotate();
         if (checkTetriminoPos(this.data, this.currentTetrimino.data, this.currentTetrimino.x, this.currentTetrimino.y + 1)) { 
             this.currentTetrimino.y++; // if the spot below is avalible, move there
         } else {
