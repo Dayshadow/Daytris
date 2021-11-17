@@ -13,10 +13,10 @@ function drawLoop() {
     ctx.fillStyle = "rgb(0, 0, 0)";
     ctx.fillRect(0, 0, w, h);
 
-    m.moveTetriminoDown();
+    m.update([]);
     m.draw(w / 2 - (m.columns * gs) / 2, h / 2 - ((m.rows - 4) * gs) / 2, gs, ctx);
 
-    //setTimeout(drawLoop, 100)
-    requestAnimationFrame(drawLoop);
+    setTimeout(drawLoop, 1000 / 60);
+    //requestAnimationFrame(drawLoop);
 }
 drawLoop();

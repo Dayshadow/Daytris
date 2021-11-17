@@ -4,6 +4,16 @@ class Matrix {
         this.rows = rows;
         this.columns = columns;
 
+        this.framesBetweenUpdates = 10;
+        this.softdropping = false;
+        this.frameCounter = this.framesBetweenUpdates;
+
+        this.inputQueue = [];
+        this.DAS = 5;
+        this.DASTimer = 0;
+
+        this.lockDelay = 60
+        this.lockTimer = this.lockDelay;
         this.stuck = false;
 
         this.rnd = new PieceRandomizer();
@@ -20,39 +30,156 @@ class Matrix {
     }
     pushTetrimino() { // this is actually mostly unnecesary, an artifact of the horrible way the code used to work
         let pushRes = pasteTetrimino(this.data, this.currentTetrimino);
-        if (pushRes !== null) {
+        if (pushRes) {
             this.data = pushRes;
         } else {
             return null;
         }
     }
+    removeTetrimino() {
+        this.data = pasteTetrimino(this.data, this.currentTetrimino, true); // removes the existing tetrimino
+    }
+    checkRelativePos(relX, relY, rot) {
+        return checkTetriminoPos(
+            this.data,
+            tData[this.currentTetrimino.type].rotationStates[(this.currentTetrimino.rs + rot) % 4],
+            this.currentTetrimino.x + relX,
+            this.currentTetrimino.y + relY
+        )
+    }
 
-    moveTetriminoDown() {
+    processStuck() {
         // -------------------example code mostly for testing-------------------------------
         if (this.stuck) {
-            let newX = Math.floor(Math.random() * 7);
-            let newType = this.rnd.pick();
-            let newRot = Math.floor(Math.random() * 4);
-            if (checkTetriminoPos(this.data, tData[newType].rotationStates[newRot], newX, 0)) {
-                this.currentTetrimino = new Tetrimino(newX, 0, newType, newRot);
+            if (this.lockTimer <= 0 /*&& !this.checkRelativePos(0, 1, 0)*/) {
+                this.currentTetrimino = new Tetrimino(this.currentTetrimino.x, this.currentTetrimino.y, this.currentTetrimino.type, this.currentTetrimino.rs);
+                pasteTetrimino(this.data, this.currentTetrimino);
+                let newX = 3;
+                let newType = this.rnd.pick();
+                let newRot = 0;
+                if (checkTetriminoPos(this.data, tData[newType].rotationStates[newRot], newX, 3)) {
+                    this.currentTetrimino = new Tetrimino(newX, 3, newType, newRot);
+                } else {
+                    this.regenerate();
+                }
+
+                this.resetLockTimer();
+                this.stuck = false;
             } else {
-                this.regenerate();
+                if (this.softdropping) {
+                    this.lockTimer -= 10;
+                } else {
+                    this.lockTimer--;
+                }
             }
-            this.stuck = false;
         }
         // ----------------------------------------------------------------------------------
 
+    }
 
-        this.data = pasteTetrimino(this.data, this.currentTetrimino, true); // removes the existing tetrimino
-        //this.currentTetrimino.rotate();
-        if (checkTetriminoPos(this.data, this.currentTetrimino.data, this.currentTetrimino.x, this.currentTetrimino.y + 1)) { 
-            this.currentTetrimino.y++; // if the spot below is avalible, move there
+    moveTetriminoDown() {
+        if (this.checkRelativePos(0, 1, 0)) {
+            this.currentTetrimino.y++; // if the spot below is avalible, move down one
+            this.stuck = false;
+            return true;
         } else {
-            this.stuck = true; // this is temporary, I will implement lock delay
+            this.stuck = true;
+            return false;
+        }
+    }
+    hardDrop() {
+        while (this.moveTetriminoDown()) { }
+        this.lockTimer = 0;
+    }
+    setSoftdrop(bool) {
+        // this is scuffed but it makes it so that 
+        // whenever this.softdropping goes from false to true, it sets the frame counter to zero
+        if (bool) {
+            if (!this.softdropping) {
+                this.frameCounter = 0;
+            }
+            this.softdropping = true;
+        } else {
+            this.softdropping = false;
+        }
+    }
+
+    moveTetriminoSideways(relX) {
+        if (this.checkRelativePos(relX, 0, 0)) {
+            this.currentTetrimino.x += relX;
+            return true;
+        }
+        return false;
+    }
+    rotateTetrimino(clockwise = true) {
+        if (clockwise && this.checkRelativePos(0, 0, 1)) {
+            this.currentTetrimino.rotate()
+        }
+        if (!clockwise && this.checkRelativePos(0, 0, 1)) {
+            this.currentTetrimino.rotate(-1);
+        }
+    }
+    processInputs() {
+        this.setSoftdrop(inp.getHeldKey("ArrowDown"));
+        this.removeTetrimino();
+
+        if (inp.getHeldKey("ArrowLeft")) {
+            if (this.DASTimer == 0) {
+                this.moveTetriminoSideways(-1);
+                this.resetDASTimer();
+            } 
+        }
+        if (inp.getHeldKey('ArrowRight')) {
+            if (this.DASTimer == 0) {
+                this.moveTetriminoSideways(1);
+                this.resetDASTimer();
+            }
+        }
+        if (inp.getPressedKey("ArrowUp")) {
+            this.rotateTetrimino();
+        }
+        if (inp.getPressedKey("Space")) {
+            this.hardDrop();
         }
         this.pushTetrimino();
     }
+    processInputQueue() { // unused
+        for (let i = this.inputQueue.length - 1; i >= 0; i--) {
+            if (this.inputQueue[i] == "r") {
+                this.moveTetriminoSideways(1);
+                this.inputQueue.splice(i, 1);
+            }
+            if (this.inputQueue[i] == "l") {
+                this.moveTetriminoSideways(-1);
+                this.inputQueue.splice(i, 1);
+            }
+        }
+    }
+    
+    update() {
+        if (this.DASTimer > 0) this.DASTimer--;
+        this.processInputs();
+        if (this.frameCounter <= 0) {
+            this.frameCounter = this.softdropping ? Math.floor(this.framesBetweenUpdates / 4) : this.framesBetweenUpdates;
+            // Piece Update Code -----------------------
+            console.log(inp);
+            this.removeTetrimino(); // deletes the minos represeneting the currentTetrimino from the previous frame
+            this.moveTetriminoDown();
+            //this.processInputQueue(); unnecesary
+            this.pushTetrimino(); // insert the updated tetrimino
+            // -----------------------------------------
+        } else {
+            this.frameCounter--;
+        }
+        this.processStuck();
 
+    }
+    resetLockTimer() {
+        this.lockTimer = this.lockDelay;
+    }
+    resetDASTimer() {
+        this.DASTimer = this.DAS
+    }
     checkLineClears() {
 
     }

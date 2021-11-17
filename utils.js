@@ -1,14 +1,19 @@
-let keys = [];
+Number.prototype.clamp = function (min, max) {
+    return Math.min(Math.max(this, min), max);
+};
+
+let inp = new InputHandler();
 window.addEventListener('keydown', (e) => {
-    if (!(keys.includes(e.code))) {
-        keys.push(e.code);
-        keys.map((x) => { return x.toLowerCase() })
-        console.log(keys)
-    }
+    inp.newKeyDown(e.code);
+    // if (!(keys.includes(e.code))) {
+    //     keys.push(e.code);
+    //     keys.map((x) => { return x.toLowerCase() })
+    //     console.log(keys)
+    // }
 });
 window.addEventListener('keyup', function (e) {
-    keys = keys.filter((x) => { return (x != e.code) });
-    console.log(keys)
+    inp.newKeyUp(e.code);
+    // keys = keys.filter((x) => { return (x != e.code) });
 });
 
 let mouse = {

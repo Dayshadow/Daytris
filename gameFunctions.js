@@ -15,7 +15,7 @@ function pasteTetrimino(srcArr, tetrimino, remove = false) {
     return ret;
 }
 
-function checkTetriminoPos(matrixData, tetriminoData, x, y, ctx = null) {
+function checkTetriminoPos(matrixData, tetriminoData, x, y) {
     let src = matrixData.slice(); // the slice is so that it doesn't reference the original array
     let tet = tetriminoData.slice();
     for (let i = y; i < y + tet.length; i++) {
