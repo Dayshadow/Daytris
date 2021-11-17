@@ -7,7 +7,7 @@ class Matrix {
         this.spawnX = 3;
         this.spawnY = 3;
 
-        this.framesBetweenUpdates = 30;
+        this.framesBetweenUpdates = 40;
         this.softdropping = false;
         this.frameCounter = this.framesBetweenUpdates;
 
@@ -29,7 +29,7 @@ class Matrix {
         this.holdAllowable = true;
 
         this.linesCleared = 0;
-        
+
         this.data = [];
         for (let i = 0; i < rows; i++) {
             this.data.push([]);
@@ -266,7 +266,7 @@ class Matrix {
                 linesCleared++;
             }
         }
-        console.log(linesCleared);
+        this.linesCleared += linesCleared;
     }
     clearLine(index) {
         this.removeTetrimino();
@@ -283,6 +283,7 @@ class Matrix {
             }
         }
         this.heldTetrimino = undefined;
+        this.linesCleared = 0;
     }
 
     draw(x, y, gridSize, frame, ctx, hiddenRowCount = 4) {
@@ -323,10 +324,14 @@ class Matrix {
             ctx.font = fontSize + "px system-ui"
             let heldText = "Current Held Piece: " + this.heldTetrimino.type;
             let heldTextWidth = heldText.length * fontSize * 0.465;
-            ctx.fillText(heldText, (w / 2) - heldTextWidth / 2, h * 0.95);
+            ctx.fillText(heldText, (w / 2) - heldTextWidth / 2, h * 0.92);
         }
 
-
+        fontSize = 40
+        ctx.font = fontSize + "px system-ui"
+        let linesClearedText = "Lines Cleared: " + this.linesCleared;
+        let linesClearedTextWidth = linesClearedText.length * fontSize * 0.465;
+        ctx.fillText(linesClearedText, (w / 2) - linesClearedTextWidth / 2, h * 0.97);
 
         ctx.strokeStyle = "rgb(50, 50, 50)";
         ctx.fillStyle = "rgb(20, 20, 20)"
