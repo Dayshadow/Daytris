@@ -4,6 +4,7 @@ class Tetrimino {
         this.y = y;
         this.type = type;
         this.rs = rotation_state;
+        this.color = tData[this.type].color;
         this.data = tData[this.type].rotationStates[this.rs];
     }
 
