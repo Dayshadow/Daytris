@@ -16,6 +16,7 @@ function drawLoop() {
     m.moveTetriminoDown();
     m.draw(w / 2 - (m.columns * gs) / 2, h / 2 - ((m.rows - 4) * gs) / 2, gs, ctx);
 
+    //setTimeout(drawLoop, 100)
     requestAnimationFrame(drawLoop);
 }
 drawLoop();

@@ -44,6 +44,7 @@ class Matrix {
 
 
         this.data = pasteTetrimino(this.data, this.currentTetrimino, true); // removes the existing tetrimino
+        this.currentTetrimino.rotate();
         if (checkTetriminoPos(this.data, this.currentTetrimino.data, this.currentTetrimino.x, this.currentTetrimino.y + 1)) { 
             this.currentTetrimino.y++; // if the spot below is avalible, move there
         } else {
@@ -56,7 +57,7 @@ class Matrix {
 
     }
 
-    regenerate() {
+    regenerate() { // clears the Matrix
         this.data = [];
         for (let i = 0; i < this.rows; i++) {
             this.data.push([]);
@@ -104,6 +105,7 @@ class Matrix {
         ctx.rect(x, y, boardWidth, boardHeight);
         ctx.fill();
         ctx.stroke();
+
         for (let i = 0; i < this.data.length; i++) {
             for (let j = 0; j < this.data[i].length; j++) {
                 if (this.data[i][j].occupied) {
