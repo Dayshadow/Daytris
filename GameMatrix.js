@@ -28,7 +28,8 @@ class Matrix {
         this.heldTetrimino;
         this.holdAllowable = true;
 
-
+        this.linesCleared = 0;
+        
         this.data = [];
         for (let i = 0; i < rows; i++) {
             this.data.push([]);
