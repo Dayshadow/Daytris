@@ -41,3 +41,49 @@ function shiftLinesDown(data, deletedIndex) {
     }
     data.unshift(tmpArr);
 }
+
+function drawTetriminoOutline(tetriminoData, x, y, minoSize, internalRectSize, ctx) {
+    ctx.strokeStyle = "#474747";
+    ctx.fillStyle = "#474747"
+
+    for (let row = 0; row < tetriminoData.length; row++) {
+        for (let column = 0; column < tetriminoData[row].length; column++) {
+            if (tetriminoData[row][column]) {
+
+                let newX = x + column * minoSize + minoSize / 2//((minoSize - internalRectSize) / 2);
+                let newY = y + row * minoSize + minoSize / 2//((minoSize - internalRectSize) / 2);
+                //ctx.fill();
+                ctx.beginPath();
+                ctx.arc(newX, newY, minoSize / 2, 0, Math.PI * 2);
+                ctx.fill();
+                //strokeRoundedRect(rectX, rectY, internalRectSize, internalRectSize, 6, ctx);
+            }
+        }
+    }
+}
+
+function strokeRoundedRect(x, y, w, h, _lineWidth, ctx) {
+    ctx.lineCap = "round";
+    ctx.lineWidth = _lineWidth //80;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + w, y);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x + w, y);
+    ctx.lineTo(x + w, y + h);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x + w, y + h);
+    ctx.lineTo(x, y + h);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.lineCap = "butt"
+}

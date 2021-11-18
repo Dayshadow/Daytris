@@ -12,9 +12,9 @@ class Matrix {
         this.frameCounter = this.framesBetweenUpdates;
 
         this.inputQueue = [];
-        this.DAS = 5;
+        this.DAS = 3;
         this.DASTimer = 0;
-        this.DASDelay = 10;
+        this.DASDelay = 8;
         this.DASDelayTimer = 0;
 
         this.lastInput;
@@ -25,6 +25,7 @@ class Matrix {
 
         this.rnd = new PieceRandomizer();
         this.currentTetrimino = new Tetrimino(this.spawnX, this.spawnY, this.rnd.pick(), 0);
+        this.dropPosition;
         this.heldTetrimino;
         this.holdAllowable = true;
 
@@ -125,6 +126,18 @@ class Matrix {
             this.stuck = true;
             return false;
         }
+    }
+    getDropPosition() {
+        this.removeTetrimino();
+        for (let i = 0; i < this.data.length; i++) {
+            //console.log("checked")
+            if (!this.checkRelativePos(0, i, 0)) {
+                this.pushTetrimino();
+                this.dropPosition = { x: this.currentTetrimino.x, y: this.currentTetrimino.y + i }
+                return;
+            }
+        }
+        this.dropPosition = undefined;
     }
     hardDrop() {
         while (this.moveTetriminoDown()) { }
@@ -245,6 +258,7 @@ class Matrix {
         } else {
             this.frameCounter--;
         }
+        this.getDropPosition();
         this.processStuck();
 
     }
@@ -292,6 +306,7 @@ class Matrix {
         let boardWidth = this.columns * gridSize;
         let boardHeight = numDrawRows * gridSize;
 
+
         ctx.fillStyle = rgb(
             Math.floor(Math.sin(frame / 120 + 12.3) * 128) + 128,
             Math.floor(Math.cos(frame / 100) * 128) + 128,
@@ -322,10 +337,12 @@ class Matrix {
         if (this.heldTetrimino) {
             fontSize = 30
             ctx.font = fontSize + "px system-ui"
-            let heldText = "Current Held Piece: " + this.heldTetrimino.type;
+            let heldText = "Current Held Piece: ";
             let heldTextWidth = heldText.length * fontSize * 0.465;
+            drawTetriminoOutline(this.heldTetrimino.data, (w / 2) + heldTextWidth / 2, h * 0.9, gridSize * 0.5, ctx)
             ctx.fillText(heldText, (w / 2) - heldTextWidth / 2, h * 0.92);
         }
+
 
         fontSize = 40
         ctx.font = fontSize + "px system-ui"
@@ -335,30 +352,8 @@ class Matrix {
 
         ctx.strokeStyle = "rgb(50, 50, 50)";
         ctx.fillStyle = "rgb(20, 20, 20)"
-        ctx.lineCap = "round";
-        ctx.lineWidth = 80;
+        strokeRoundedRect(x, y, boardWidth, boardHeight, 80, ctx)
 
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + boardWidth, y);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(x + boardWidth, y);
-        ctx.lineTo(x + boardWidth, y + boardHeight);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(x + boardWidth, y + boardHeight);
-        ctx.lineTo(x, y + boardHeight);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(x, y + boardHeight);
-        ctx.lineTo(x, y);
-        ctx.stroke();
-
-        ctx.lineCap = "butt";
         ctx.fillStyle = "rgb(20, 20, 20)"
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -387,6 +382,16 @@ class Matrix {
             ctx.moveTo(x, y + i * gridSize);
             ctx.lineTo(x + this.columns * gridSize, y + i * gridSize);
             ctx.stroke();
+        }
+
+        if (this.dropPosition) {
+            drawTetriminoOutline(
+                this.currentTetrimino.data,
+                x + this.dropPosition.x * gridSize,
+                y + (this.dropPosition.y - hiddenRowCount - 1) * gridSize,
+                gridSize,
+                gridSize / 2,
+                ctx)
         }
     }
 }
