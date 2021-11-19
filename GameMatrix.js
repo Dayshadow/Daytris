@@ -54,10 +54,16 @@ class Matrix {
     checkRelativePos(relX, relY, rot) {
         return checkTetriminoPos(
             this.data,
-            tData[this.currentTetrimino.type].rotationStates[(this.currentTetrimino.rs + rot) % 4],
+            tData[this.currentTetrimino.type].rotationStates[mod(this.currentTetrimino.rs + rot , 4)],
             this.currentTetrimino.x + relX,
             this.currentTetrimino.y + relY
         )
+    }
+    moveRelative(relX, relY, isClockwise) {
+        this.currentTetrimino.rotate(isClockwise)
+        this.currentTetrimino.x = this.currentTetrimino.x + relX;
+        this.currentTetrimino.y = this.currentTetrimino.y + relY;
+        console.log(this.currentTetrimino)
     }
 
     respawnTetrimino() {
@@ -88,6 +94,7 @@ class Matrix {
                 this.respawnTetrimino();
             }
         }
+        this.getDropPosition();
     }
     lockPiece() {
         this.currentTetrimino = new Tetrimino(this.currentTetrimino.x, this.currentTetrimino.y, this.currentTetrimino.type, this.currentTetrimino.rs);
@@ -163,16 +170,23 @@ class Matrix {
         }
         return false;
     }
-    rotateTetrimino(clockwise = true) {
-        if (clockwise && this.checkRelativePos(0, 0, 1)) {
-            this.currentTetrimino.rotate()
+    rotateTetrimino(isClockwise = true) {
+        if (isClockwise ? this.checkRelativePos(0, 0, 1) : this.checkRelativePos(0, 0, -1)) {
+            this.currentTetrimino.rotate(isClockwise)
         } else {
-            
-        }
-        if (!clockwise && this.checkRelativePos(0, 0, 1)) {
-            this.currentTetrimino.rotate(-1);
-        } else {
-
+            for (let i = 0; i < 4; i++) {
+                console.log("test attempt: " + (i + 1))
+                let wk = getWallKick(
+                    this.currentTetrimino.type,
+                    this.currentTetrimino.rs,
+                    mod(this.currentTetrimino.rs + (isClockwise ? 1 : -1), 4),
+                    i
+                )
+                if (this.checkRelativePos(wk.x, -wk.y, isClockwise ? 1 : -1)) {
+                    this.moveRelative(wk.x, -wk.y, isClockwise);
+                    break;
+                }
+            }
         }
     }
     processInputs() {
@@ -222,7 +236,7 @@ class Matrix {
             this.rotateTetrimino();
         }
         if (inp.getPressedKey("KeyZ")) {
-            this.rotateTetrimino(-1);
+            this.rotateTetrimino(false);
         }
         if (inp.getPressedKey("Space")) {
             this.hardDrop();
@@ -365,6 +379,18 @@ class Matrix {
         ctx.fill();
         ctx.stroke();
 
+        if (this.dropPosition) {
+            //if (!(this.dropPosition.x == this.currentTetrimino.x && this.dropPosition.y == this.currentTetrimino.y)) {
+            drawTetriminoOutline(
+                this.currentTetrimino.data,
+                x + this.dropPosition.x * gridSize,
+                y + (this.dropPosition.y - hiddenRowCount - 1) * gridSize,
+                gridSize,
+                gridSize / 2,
+                ctx)
+            //}
+        }
+
         for (let i = 0; i < this.data.length; i++) {
             for (let j = 0; j < this.data[i].length; j++) {
                 if (this.data[i][j].occupied) {
@@ -388,14 +414,5 @@ class Matrix {
             ctx.stroke();
         }
 
-        if (this.dropPosition) {
-            drawTetriminoOutline(
-                this.currentTetrimino.data,
-                x + this.dropPosition.x * gridSize,
-                y + (this.dropPosition.y - hiddenRowCount - 1) * gridSize,
-                gridSize,
-                gridSize / 2,
-                ctx)
-        }
     }
 }

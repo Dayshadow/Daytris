@@ -13,10 +13,10 @@ class Tetrimino {
     }
     rotate(clockwise = true) {
         if (clockwise) {
-            this.rs = (this.rs + 1) % 4
+            this.rs = mod(this.rs + 1, 4)
             this.data = tData[this.type].rotationStates[this.rs];
         } else {
-            this.rs = (this.rs - 1) % 4
+            this.rs = mod(this.rs - 1, 4)
             this.data = tData[this.type].rotationStates[this.rs];
         }
     }

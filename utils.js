@@ -68,3 +68,7 @@ function shuffle(array) {
 function rgb(r, g, b) {
     return "rgb(" + r + ", " + g + ", " + b +")"
 }
+
+function mod(x, m) {
+    return (x + m)%m;
+}
