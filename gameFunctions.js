@@ -87,3 +87,8 @@ function strokeRoundedRect(x, y, w, h, _lineWidth, ctx) {
     ctx.stroke();
     ctx.lineCap = "butt"
 }
+
+function getWallKick(tetriminoType, initState, targetState, testIndex) {
+    return tData[tetriminoType].wallKicks.initState[initState].targetState[targetState].testIndex[testIndex];
+}
+

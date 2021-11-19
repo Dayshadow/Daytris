@@ -166,9 +166,13 @@ class Matrix {
     rotateTetrimino(clockwise = true) {
         if (clockwise && this.checkRelativePos(0, 0, 1)) {
             this.currentTetrimino.rotate()
+        } else {
+            
         }
         if (!clockwise && this.checkRelativePos(0, 0, 1)) {
             this.currentTetrimino.rotate(-1);
+        } else {
+
         }
     }
     processInputs() {
@@ -249,7 +253,7 @@ class Matrix {
 
         this.processInputs();
         if (this.frameCounter <= 0) {
-            this.frameCounter = this.softdropping ? this.DAS : this.framesBetweenUpdates;
+            this.frameCounter = this.softdropping ? this.DAS : this.framesBetweenUpdates; // makes the game update faster if you are holding down (scuffed?)
             // Piece Update Code -----------------------
             this.removeTetrimino(); // deletes the minos represeneting the currentTetrimino from the previous frame
             this.moveTetriminoDown();
@@ -339,7 +343,7 @@ class Matrix {
             ctx.font = fontSize + "px system-ui"
             let heldText = "Current Held Piece: ";
             let heldTextWidth = heldText.length * fontSize * 0.465;
-            drawTetriminoOutline(this.heldTetrimino.data, (w / 2) + heldTextWidth / 2, h * 0.9, gridSize * 0.5, ctx)
+            drawTetriminoOutline(this.heldTetrimino.data, (w / 2) + heldTextWidth / 2, h * 0.9, gridSize * 0.5, gridSize, ctx)
             ctx.fillText(heldText, (w / 2) - heldTextWidth / 2, h * 0.92);
         }
 
