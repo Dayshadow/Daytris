@@ -133,32 +133,54 @@ function getCentroid(verticies) {
 function scaleFromPoint(pos, pointPos, scalingFactor) {
     return new Vector(((pos.x - pointPos.x) * scalingFactor) + pointPos.x, ((pos.y - pointPos.y) * scalingFactor) + pointPos.y)
 }
-function getShadedBorderPolygons(verticies, borderWidth) { // not the best implementation
+function getShadedBorderPolygons(verticies, borderWidth, lightAngle = Math.PI) { // not the best implementation
     let centriod = getCentroid(verticies);
     let ov = getOutwardsVectors(verticies);
+    let f = (v, m) => { // messing around
+        if (m > 0) {
+            m--;
+            f(getLineCenters(v), m)
+        }
+    }
+    let mdp = getLineCenters(verticies);
+    f(mdp, 50)
 
-    let upQuads = [];
-    let leftQuads = [];
-    let rightQuads = [];
-    let downQuads = [];
 
-    for (let i = 0; i < ov.length; i++) {
-        ctx.beginPath();
-        ctx.moveTo(verticies[i].x, verticies[i].y);
-        ctx.lineTo(verticies[i].x + ov[i].x * borderWidth, verticies[i].y + ov[i].y * borderWidth);
-        ctx.fillStyle = "red"
-        ctx.stroke();
+
+    for (let i = 0; i < ov.length; i++) { // for every line of the polygon
+
+        // generate the outwards quad
+        let outQuad = quad(
+            verticies[i].x, verticies[i].y,
+            verticies[i].x + ov[i].x * borderWidth, verticies[i].y + ov[i].y * borderWidth,
+            verticies[(i + 1) % ov.length].x + ov[(i + 1) % ov.length].x * borderWidth, verticies[(i + 1) % ov.length].y + ov[(i + 1) % ov.length].y * borderWidth,
+            verticies[(i + 1) % ov.length].x, verticies[(i + 1) % ov.length].y,
+        )
+        let outQuadDir = new Vector();
+        // ctx.fillStyle = "lightgrey"
+        // ctx.strokeStyle = "lightgrey"
+        // ctx.lineWidth = 1
+        // polygon(outQuad, ctx)
+        // ctx.stroke();
+        // ctx.fill();
+        // generate the inwards quad
+        let inQuad = quad(
+            verticies[i].x, verticies[i].y,
+            verticies[i].x - ov[i].x * borderWidth, verticies[i].y - ov[i].y * borderWidth,
+            verticies[(i + 1) % ov.length].x - ov[(i + 1) % ov.length].x * borderWidth, verticies[(i + 1) % ov.length].y - ov[(i + 1) % ov.length].y * borderWidth,
+            verticies[(i + 1) % ov.length].x, verticies[(i + 1) % ov.length].y,
+        )
+        // ctx.fillStyle = "grey"
+        // ctx.strokeStyle = "grey"
+        // ctx.lineWidth = 1
+        // polygon(inQuad, ctx)
+        // ctx.stroke();
+        // ctx.fill();
     }
     //ctx.fillStyle = "red"
     //polygon(upQuads, ctx);
     //ctx.fill()
-    // up facing
 
-    // left facing
-
-    // down facing
-
-    // right facing
 }
 
 function getOutwardsVectors(verticies) {
@@ -170,7 +192,7 @@ function getOutwardsVectors(verticies) {
         let y1 = verticies[(i + 1) % verticies.length].y // (modulo is used to wrap the last vertex back to the first)
         let x2 = verticies[(i + 2) % verticies.length].x // Third vertex x and y
         let y2 = verticies[(i + 2) % verticies.length].y
-        
+
         let line1Vec = new Vector(x1 - x0, y1 - y0) // Gets the vector for the line between the first and second verticies
         let line2Vec = new Vector(x2 - x1, y2 - y1) // Gets the vector for the line between the second and third verticies
         let outwardsVec = line1Vec.getBisector(line2Vec).rotate(-Math.PI / 2); // Bisects the two lines and faces the angle outwards
@@ -179,6 +201,38 @@ function getOutwardsVectors(verticies) {
     let last = ret.pop();
     ret.unshift(last); // Just shifts everything over by one so each vector lines up with each vertex by index
     return ret;
+}
+
+function getLineCenters(verticies) { // surprisingly close to that last function
+    let ret = [];
+    for (let i = 0; i < verticies.length; i++) {
+        let x0 = verticies[i].x // First vertex x and y
+        let y0 = verticies[i].y
+        let x1 = verticies[(i + 1) % verticies.length].x // Second vertex x and y
+        let y1 = verticies[(i + 1) % verticies.length].y // (modulo is used to wrap the last vertex back to the first)
+
+
+        let line1Vec = new Vector(x1 - x0, y1 - y0) // Gets the vector for the line between the first and second verticies
+        let midPoint = line1Vec.multiplyBy(0.5); // halves it (duh)
+        midPoint = midPoint.addVector(new Vector(x0, y0));
+        ret.push(midPoint);
+    }
+    // let last = ret.pop();
+    // ret.unshift(last); // Just shifts everything over by one so each vector lines up with each vertex by index
+
+    ctx.lineWidth = 2
+    ctx.strokeStyle = "green"
+    polygon(ret, ctx)
+    ctx.stroke();
+    return ret;
+}
+function quad(x0, y0, x1, y1, x2, y2, x3, y3) {
+    return [
+        new Vector(x0, y0),
+        new Vector(x1, y1),
+        new Vector(x2, y2),
+        new Vector(x3, y3),
+    ]
 }
 function vecFromAngle(angle) {
     return new Vector(Math.cos(angle), Math.sin(angle))
