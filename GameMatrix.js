@@ -54,7 +54,7 @@ class Matrix {
     checkRelativePos(relX, relY, rot) {
         return checkTetriminoPos(
             this.data,
-            tData[this.currentTetrimino.type].rotationStates[mod(this.currentTetrimino.rs + rot , 4)],
+            tData[this.currentTetrimino.type].rotationStates[mod(this.currentTetrimino.rs + rot, 4)],
             this.currentTetrimino.x + relX,
             this.currentTetrimino.y + relY
         )
@@ -369,15 +369,26 @@ class Matrix {
         ctx.fillText(linesClearedText, (w / 2) - linesClearedTextWidth / 2, h * 0.97);
 
         ctx.strokeStyle = "rgb(50, 50, 50)";
+        ctx.fillStyle = "rgb(200, 200, 200)"
+        ctx.lineWidth = 20
+        drawBeveledBox(x - ctx.lineWidth,
+            y - ctx.lineWidth,
+            boardWidth + ctx.lineWidth * 2,
+            boardHeight + ctx.lineWidth * 2,
+            [20, 20, 20, 20],
+            ctx,
+            true,
+            Math.PI * 1.5,
+            0.3)
         ctx.fillStyle = "rgb(20, 20, 20)"
-        strokeRoundedRect(x, y, boardWidth, boardHeight, 80, ctx)
 
-        ctx.fillStyle = "rgb(20, 20, 20)"
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.rect(x, y, boardWidth, boardHeight);
-        ctx.fill();
-        ctx.stroke();
+        drawBeveledBox(x, y, boardWidth, boardHeight, [5, 5, 5, 5], ctx)
+        // ctx.fillStyle = "rgb(20, 20, 20)"
+        // ctx.lineWidth = 2;
+        // ctx.beginPath();
+        // ctx.rect(x, y, boardWidth, boardHeight);
+        // ctx.fill();
+        // ctx.stroke();
 
         if (this.dropPosition) {
             //if (!(this.dropPosition.x == this.currentTetrimino.x && this.dropPosition.y == this.currentTetrimino.y)) {
@@ -401,18 +412,18 @@ class Matrix {
                 }
             }
         }
-        for (let i = 0; i < this.columns; i++) {
-            ctx.beginPath();
-            ctx.moveTo(x + i * gridSize, y);
-            ctx.lineTo(x + i * gridSize, y + numDrawRows * gridSize);
-            ctx.stroke();
-        }
-        for (let i = 0; i < numDrawRows; i++) {
-            ctx.beginPath();
-            ctx.moveTo(x, y + i * gridSize);
-            ctx.lineTo(x + this.columns * gridSize, y + i * gridSize);
-            ctx.stroke();
-        }
+        // for (let i = 0; i < this.columns; i++) {
+        //     ctx.beginPath();
+        //     ctx.moveTo(x + i * gridSize, y);
+        //     ctx.lineTo(x + i * gridSize, y + numDrawRows * gridSize);
+        //     ctx.stroke();
+        // }
+        // for (let i = 0; i < numDrawRows; i++) {
+        //     ctx.beginPath();
+        //     ctx.moveTo(x, y + i * gridSize);
+        //     ctx.lineTo(x + this.columns * gridSize, y + i * gridSize);
+        //     ctx.stroke();
+        // }
 
     }
 }

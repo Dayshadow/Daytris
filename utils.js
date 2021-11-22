@@ -75,12 +75,14 @@ function shuffle(array) {
 function rgb(r, g, b) {
     return "rgb(" + r + ", " + g + ", " + b + ")"
 }
-
+function rgba(r, g, b, a) {
+    return "rgb(" + r + ", " + g + ", " + b + "," + a + ")"
+}
 function mod(x, m) {
     return (x + m) % m;
 }
 
-function drawBeveledBox(x, y, w, h, bevels, ctx, shaded = false, lightAngle = undefined) { // more flexible than just setting linejoin to bevel
+function drawBeveledBox(x, y, w, h, bevels, ctx, shaded = false, lightAngle = undefined, shadingOpacity = 0) { // more flexible than just setting linejoin to bevel
     //let baseColor = ctx.fillStyle;
     let outline = [
         new Vector(x + bevels[0], y),
@@ -92,12 +94,11 @@ function drawBeveledBox(x, y, w, h, bevels, ctx, shaded = false, lightAngle = un
         new Vector(x, y + h - bevels[3]),
         new Vector(x, y + bevels[0])
     ]
-    ctx.fillStyle = "#ffffff"
     polygon(outline, ctx);
     ctx.fill();
 
     if (shaded) {
-        getShadedBorderPolygons(outline, 40, lightAngle)
+        getShadedBorderPolygons(outline, ctx.lineWidth, shadingOpacity, lightAngle)
     }
 }
 
@@ -122,10 +123,10 @@ function getCentroid(verticies) {
 function scaleFromPoint(pos, pointPos, scalingFactor) {
     return new Vector(((pos.x - pointPos.x) * scalingFactor) + pointPos.x, ((pos.y - pointPos.y) * scalingFactor) + pointPos.y)
 }
-function getShadedBorderPolygons(verticies, borderWidth, lightAngle = Math.PI) { // not the best implementation
+function getShadedBorderPolygons(verticies, borderWidth, shadingOpacity, lightAngle = Math.PI) { // not the best implementation
     let ov = getOutwardsVectors(verticies);
-    let mdp = getLineCenters(verticies);
-
+    //let mdp = getLineCenters(verticies);
+    let origColor = ctx.fillStyle;
     for (let i = 0; i < ov.length; i++) { // for every line of the polygon
 
         // generate the outwards quad
@@ -138,14 +139,16 @@ function getShadedBorderPolygons(verticies, borderWidth, lightAngle = Math.PI) {
         let outQuadDir = ov[i].getBisector(ov[(i + 1) % ov.length]);
         let lightDir = new Vector(Math.cos(lightAngle), Math.sin(lightAngle));
         let lightAmount = Math.abs(outQuadDir.angleBetween(lightDir)) / Math.PI;
-        let greyscaleValue = Math.floor((lightAmount * 256) * 0.75) + 64;
-        ctx.fillStyle = rgb(greyscaleValue, greyscaleValue, greyscaleValue);
+        let greyscaleValue = Math.floor(lightAmount * 256);
+
         ctx.strokeStyle = ctx.fillStyle;
         ctx.lineWidth = 1
         polygon(outQuad, ctx)
-        //ctx.stroke();
+        ctx.fillStyle = origColor;
         ctx.fill();
-        // drawVector(lightDir, w/2, h/2)
+        ctx.fillStyle = rgba(greyscaleValue, greyscaleValue, greyscaleValue, shadingOpacity);
+        ctx.stroke();
+        ctx.fill();
 
         // generate the inwards quad
         let inQuad = quad(
@@ -155,22 +158,18 @@ function getShadedBorderPolygons(verticies, borderWidth, lightAngle = Math.PI) {
             verticies[(i + 1) % ov.length].x, verticies[(i + 1) % ov.length].y,
         );
         let inQuadDir = ov[i].getBisector(ov[(i + 1) % ov.length]).rotate(Math.PI);
-        drawVector(inQuadDir, mdp[i].x, mdp[i].y)
-        lightDir = new Vector(Math.cos(lightAngle - Math.PI), Math.sin(lightAngle - Math.PI));
-        lightAmount = Math.abs(outQuadDir.angleBetween(lightDir)) / Math.PI;
-        greyscaleValue = Math.floor((lightAmount * 256) * 0.75) + 64;
-        ctx.fillStyle = rgb(greyscaleValue, greyscaleValue, greyscaleValue);
+        lightAmount = Math.abs(inQuadDir.angleBetween(lightDir)) / Math.PI;
+        greyscaleValue = Math.floor(lightAmount * 256);
 
-        // ctx.fillStyle = "grey"
-        ctx.strokeStyle = ctx.fillStyle;
         ctx.lineWidth = 1
         polygon(inQuad, ctx)
+        ctx.fillStyle = origColor;
+        ctx.fill();
+        ctx.fillStyle = rgba(greyscaleValue, greyscaleValue, greyscaleValue, shadingOpacity);
+        ctx.strokeStyle = ctx.fillStyle;
         ctx.stroke();
         ctx.fill();
     }
-    //ctx.fillStyle = "red"
-    //polygon(upQuads, ctx);
-    //ctx.fill()
 
 }
 
@@ -208,13 +207,7 @@ function getLineCenters(verticies) { // surprisingly close to that last function
         midPoint = midPoint.addVector(new Vector(x0, y0));
         ret.push(midPoint);
     }
-    // let last = ret.pop();
-    // ret.unshift(last); // Just shifts everything over by one so each vector lines up with each vertex by index
 
-    // ctx.lineWidth = 2
-    // ctx.strokeStyle = "green"
-    // polygon(ret, ctx)
-    // ctx.stroke();
     return ret;
 }
 function drawVector(vector, x = 0, y = 0) {
