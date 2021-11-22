@@ -4,7 +4,7 @@ const JLTSZ_WALLKICKS = {
         {
             "targetState": [
                 undefined,
-                {
+                {                  // Organized by initial rotation state index >> final rotation index as per the wiki
                     "testIndex": [ // 0 >> 1
                         { x: -1, y: 0 },
                         { x: -1, y: 1 },
