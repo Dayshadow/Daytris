@@ -318,11 +318,12 @@ class Matrix {
         this.linesCleared = 0;
     }
 
-    draw(x, y, gridSize, frame, ctx, hiddenRowCount = 4) {
+    draw(x, y, gridSize, frame, ctx, hiddenRowCount = 4) { // hell
 
         let numDrawRows = this.rows - hiddenRowCount;
         let boardWidth = this.columns * gridSize;
         let boardHeight = numDrawRows * gridSize;
+
 
 
         ctx.fillStyle = rgb(
@@ -368,30 +369,15 @@ class Matrix {
         let linesClearedTextWidth = linesClearedText.length * fontSize * 0.465;
         ctx.fillText(linesClearedText, (w / 2) - linesClearedTextWidth / 2, h * 0.97);
 
-        ctx.strokeStyle = "rgb(50, 50, 50)";
-        ctx.fillStyle = "rgb(200, 200, 200)"
-        ctx.lineWidth = 20
-        drawBeveledBox(x - ctx.lineWidth,
+        ctx.fillStyle = rgb(20, 20, 20); // BG
+        ctx.fillRect(
+            x - ctx.lineWidth,
             y - ctx.lineWidth,
-            boardWidth + ctx.lineWidth * 2,
-            boardHeight + ctx.lineWidth * 2,
-            [20, 20, 20, 20],
-            ctx,
-            true,
-            Math.PI * 1.5,
-            0.3)
-        ctx.fillStyle = "rgb(20, 20, 20)"
-
-        drawBeveledBox(x, y, boardWidth, boardHeight, [5, 5, 5, 5], ctx)
-        // ctx.fillStyle = "rgb(20, 20, 20)"
-        // ctx.lineWidth = 2;
-        // ctx.beginPath();
-        // ctx.rect(x, y, boardWidth, boardHeight);
-        // ctx.fill();
-        // ctx.stroke();
+            Math.floor(boardWidth + ctx.lineWidth * 2) - 1,
+            Math.floor(boardHeight + ctx.lineWidth * 2) - 1
+        );
 
         if (this.dropPosition) {
-            //if (!(this.dropPosition.x == this.currentTetrimino.x && this.dropPosition.y == this.currentTetrimino.y)) {
             drawTetriminoOutline(
                 this.currentTetrimino.data,
                 x + this.dropPosition.x * gridSize,
@@ -399,7 +385,6 @@ class Matrix {
                 gridSize,
                 gridSize / 2,
                 ctx)
-            //}
         }
 
         for (let i = 0; i < this.data.length; i++) {
@@ -407,23 +392,50 @@ class Matrix {
                 if (this.data[i][j].occupied) {
                     if (i - hiddenRowCount >= 0) {
                         ctx.fillStyle = this.data[i][j].color;
-                        ctx.fillRect(x + j * gridSize, y + (i - hiddenRowCount) * gridSize, gridSize, gridSize);
+                        ctx.fillRect(Math.floor(x + j * gridSize), Math.floor(y + (i - hiddenRowCount) * gridSize), Math.ceil(gridSize), Math.ceil(gridSize));
                     }
                 }
             }
         }
-        // for (let i = 0; i < this.columns; i++) {
-        //     ctx.beginPath();
-        //     ctx.moveTo(x + i * gridSize, y);
-        //     ctx.lineTo(x + i * gridSize, y + numDrawRows * gridSize);
-        //     ctx.stroke();
-        // }
-        // for (let i = 0; i < numDrawRows; i++) {
-        //     ctx.beginPath();
-        //     ctx.moveTo(x, y + i * gridSize);
-        //     ctx.lineTo(x + this.columns * gridSize, y + i * gridSize);
-        //     ctx.stroke();
-        // }
+        ctx.strokeStyle = rgba(40, 40, 40, 0.3)
+        ctx.lineWidth = 2
+        for (let i = 0; i < this.columns; i++) {
+            ctx.beginPath();
+            ctx.moveTo(x + i * gridSize, y);
+            ctx.lineTo(x + i * gridSize, y + numDrawRows * gridSize);
+            ctx.stroke();
+        }
+        for (let i = 0; i < numDrawRows; i++) {
+            ctx.beginPath();
+            ctx.moveTo(x, y + i * gridSize);
+            ctx.lineTo(x + this.columns * gridSize, y + i * gridSize);
+            ctx.stroke();
+        }
+
+        ctx.lineWidth = 20
+        let borderBox = BeveledBox(
+            Math.ceil(x - ctx.lineWidth) + 1,
+            Math.ceil(y - ctx.lineWidth) + 1,
+            Math.floor(boardWidth + ctx.lineWidth * 2) - 2,
+            Math.floor(boardHeight + ctx.lineWidth * 2) - 3,
+            [20, 20, 20, 20]
+        )
+        ctx.fillStyle = rgb(255, 250, 191);
+        drawShadedBorderPolygons(borderBox, ctx.lineWidth, 0.4, (frame / 200) % Math.PI * 2);
+
+        ctx.lineWidth = 15;
+        ctx.fillStyle = rgb(255, 250, 191);
+        let heldBoxWidth = 100;
+        let heldBoxHeight = 100;
+        let heldBoxPos = new Vector(x + boardWidth + 60, y - ctx.lineWidth / 2);
+
+        if (this.heldTetrimino) {
+            ctx.lineWidth = 2;
+            drawTetrimino(this.heldTetrimino, heldBoxPos.x + heldBoxWidth / 2, heldBoxPos.y + heldBoxHeight / 2, gridSize, ctx, true)
+        }
+        ctx.lineWidth = 15;
+        let hb = BeveledBox(heldBoxPos.x, heldBoxPos.y, heldBoxWidth, heldBoxHeight, [heldBoxWidth / 4, 0, heldBoxWidth / 4, 0])
+        drawShadedBorderPolygons(hb, ctx.lineWidth, 0.4, (frame / 200) % Math.PI * 2);
 
     }
 }

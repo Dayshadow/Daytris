@@ -82,9 +82,8 @@ function mod(x, m) {
     return (x + m) % m;
 }
 
-function drawBeveledBox(x, y, w, h, bevels, ctx, shaded = false, lightAngle = undefined, shadingOpacity = 0) { // more flexible than just setting linejoin to bevel
-    //let baseColor = ctx.fillStyle;
-    let outline = [
+function BeveledBox(x, y, w, h, bevels) { // more flexible than just setting linejoin to bevel
+    return [
         new Vector(x + bevels[0], y),
         new Vector(x + w - bevels[1], y),
         new Vector(x + w, y + bevels[1]),
@@ -94,21 +93,15 @@ function drawBeveledBox(x, y, w, h, bevels, ctx, shaded = false, lightAngle = un
         new Vector(x, y + h - bevels[3]),
         new Vector(x, y + bevels[0])
     ]
-    polygon(outline, ctx);
-    ctx.fill();
-
-    if (shaded) {
-        getShadedBorderPolygons(outline, ctx.lineWidth, shadingOpacity, lightAngle)
-    }
 }
 
-function polygon(verticies, ctx) { // assuming that the verticies passed in are in clockwise order because yes
-    ctx.beginPath();
-    ctx.moveTo(verticies[0].x, verticies[0].y);
+function polygon(verticies, renderingCtx) { // assuming that the verticies passed in are in clockwise order because yes
+    renderingCtx.beginPath();
+    renderingCtx.moveTo(verticies[0].x, verticies[0].y);
     for (let i = 1; i < verticies.length; i++) {
-        ctx.lineTo(verticies[i].x, verticies[i].y)
+        renderingCtx.lineTo(verticies[i].x, verticies[i].y)
     }
-    ctx.closePath();
+    renderingCtx.closePath();
 }
 function getCentroid(verticies) {
     let sumX = 0;
@@ -123,7 +116,7 @@ function getCentroid(verticies) {
 function scaleFromPoint(pos, pointPos, scalingFactor) {
     return new Vector(((pos.x - pointPos.x) * scalingFactor) + pointPos.x, ((pos.y - pointPos.y) * scalingFactor) + pointPos.y)
 }
-function getShadedBorderPolygons(verticies, borderWidth, shadingOpacity, lightAngle = Math.PI) { // not the best implementation
+function drawShadedBorderPolygons(verticies, borderWidth, shadingOpacity, lightAngle = Math.PI) { // not the best implementation
     let ov = getOutwardsVectors(verticies);
     //let mdp = getLineCenters(verticies);
     let origColor = ctx.fillStyle;
@@ -147,7 +140,7 @@ function getShadedBorderPolygons(verticies, borderWidth, shadingOpacity, lightAn
         ctx.fillStyle = origColor;
         ctx.fill();
         ctx.fillStyle = rgba(greyscaleValue, greyscaleValue, greyscaleValue, shadingOpacity);
-        ctx.stroke();
+        //ctx.stroke();
         ctx.fill();
 
         // generate the inwards quad
@@ -167,10 +160,11 @@ function getShadedBorderPolygons(verticies, borderWidth, shadingOpacity, lightAn
         ctx.fill();
         ctx.fillStyle = rgba(greyscaleValue, greyscaleValue, greyscaleValue, shadingOpacity);
         ctx.strokeStyle = ctx.fillStyle;
-        ctx.stroke();
+        //ctx.stroke();
         ctx.fill();
     }
-
+    ctx.lineWidth = borderWidth;
+    ctx.fillStyle = origColor;
 }
 
 function getOutwardsVectors(verticies) {
