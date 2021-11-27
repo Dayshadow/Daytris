@@ -199,16 +199,14 @@ class Matrix {
             if (this.lastInput == "ArrowRight") this.resetDASDelay();
             this.lastInput = 'ArrowLeft';
             this.moveTetriminoSideways(-1);
-        } else
-
-            if (inp.getPressedKey('ArrowRight')) {
+        } else if (inp.getPressedKey('ArrowRight')) {
                 if (this.lastInput == "ArrowLeft") this.resetDASDelay();
                 this.lastInput = 'ArrowRight';
                 this.moveTetriminoSideways(1);
             }
 
         // code for if you continue to hold the arrow key 
-        //makes it so it waits a bit before continuing
+        // makes it so it waits a bit before continuing
         if (inp.getHeldKey("ArrowLeft")) {
             if (this.lastInput == "ArrowRight") this.resetDASDelay();
             if (this.DASDelayTimer > 0) { // these timers are getting confusing
