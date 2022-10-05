@@ -50,13 +50,11 @@ function drawTetriminoOutline(tetriminoData, x, y, minoSize, internalRectSize, c
         for (let column = 0; column < tetriminoData[row].length; column++) {
             if (tetriminoData[row][column]) {
 
-                let newX = x + column * minoSize + minoSize / 2//((minoSize - internalRectSize) / 2);
-                let newY = y + row * minoSize + minoSize / 2//((minoSize - internalRectSize) / 2);
-                //ctx.fill();
+                let newX = x + column * minoSize + minoSize / 2;
+                let newY = y + row * minoSize + minoSize / 2;
                 ctx.beginPath();
                 ctx.arc(newX, newY, minoSize / 2, 0, Math.PI * 2);
                 ctx.fill();
-                //strokeRoundedRect(rectX, rectY, internalRectSize, internalRectSize, 6, ctx);
             }
         }
     }
